@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blogging Website</title>
+    <style>
+        /* Basic styles for the page */
+        body { font-family: Arial, sans-serif; }
+        .nav { display: flex; justify-content: space-between; padding: 10px; background-color: #f4f4f4; }
+        .left { font-size: 24px; }
+        .right { text-align: right; }
+        .search-container { text-align: center; margin: 20px; }
+        .search-bar { width: 300px; padding: 10px; }
+        .search-button { padding: 10px 20px; }
+        #postContainer { padding: 20px; }
+        .post { border: 1px solid #ddd; margin-bottom: 20px; padding: 15px; }
+        .post img { max-width: 100px; height: auto; }
+        .footer { text-align: center; padding: 10px; background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="left">
+            <h1>Blogging Website</h1>
+        </div>
+        <div class="right">
+            <a href="aboutus.html"><h3>About Us</h3></a>
+            <h3>Join Us</h3>
+        </div>
+    </nav>
+
+    <hr>
+    <div class="search-container">
+        <input type="text" id="searchBar" class="search-bar" placeholder="🔍 Search by title or content...">
+        <button class="search-button" onclick="searchPosts()">Search</button>
+    </div>
+    <hr>
+    <div id="postContainer"></div>
+    <div id="paginationContainer"></div>
+    <div class="footer">
+        <div class="top"></div>
+        <br>
+        <div class="bottom"><h1>Blogging Website</h1></div>
+    </div>
+    <script>
+        let currentPage = 1;
+        const postsPerPage = 10;
+
+        async function displayPosts(page = 1) {
+            const postContainer = document.getElementById('postContainer');
+            postContainer.innerHTML = ""; // Clear existing posts
+
+            try {
+                const response = await fetch(`/api/posts?page=${page}`); // Fetch posts from the server
+                const posts = await response.json();
+
+                if (posts.length === 0) return; // Exit if there are no posts
+
+                // Sort posts by date in descending order (if date is available)
+                posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                // Get posts for the current page
+                const start = (page - 1) * postsPerPage;
+                const end = start + postsPerPage;
+                const postsToShow = posts.slice(start, end);
+
+                postsToShow.forEach(post => {
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('post');
+
+                    // Add image to the post if it exists
+                    if (post.image) {
+                        const imageElement = document.createElement('img');
+                        imageElement.src = post.image;
+                        imageElement.alt = 'Post Image';
+                        postElement.appendChild(imageElement);
+                    }
+
+                    // Add title to the post
+                    if (post.title) {
+                        const titleElement = document.createElement('h3');
+                        titleElement.classList.add('post-title');
+                        titleElement.innerText = post.title;
+                        postElement.appendChild(titleElement);
+                    }
+
+                    // Add author name to the post
+                    if (post.author) {
+                        const authorElement = document.createElement('p');
+                        authorElement.classList.add('post-author');
+                        authorElement.innerText = `By: ${post.author}`;
+                        postElement.appendChild(authorElement);
+                    }
+
+                    // Add text content to the post
+                    if (post.content) {
+                        const contentElement = document.createElement('p');
+                        contentElement.classList.add('post-content');
+                        contentElement.innerText = post.content;
+                        postElement.appendChild(contentElement);
+                    }
+
+                    // Append the post to the post container
+                    postContainer.appendChild(postElement);
+                });
+
+                // Create pagination controls
+                createPaginationControls(page);
+
+            } catch (error) {
+                console.error('Error loading posts:', error);
+            }
+        }
+
+        function createPaginationControls(currentPage) {
+            const paginationContainer = document.getElementById('paginationContainer');
+            paginationContainer.innerHTML = ""; // Clear existing pagination
+
+            // Create Previous button
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.innerText = 'Previous';
+                prevButton.onclick = () => displayPosts(currentPage - 1);
+                paginationContainer.appendChild(prevButton);
+            }
+
+            // Create page number buttons
+            const totalPages = Math.ceil(posts.length / postsPerPage); // Ensure posts.length is available
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.innerText = i;
+                pageButton.classList.add(i === currentPage ? 'active' : '');
+                pageButton.onclick = () => displayPosts(i);
+                paginationContainer.appendChild(pageButton);
+            }
+
+            // Create Next button
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.innerText = 'Next';
+                nextButton.onclick = () => displayPosts(currentPage + 1);
+                paginationContainer.appendChild(nextButton);
+            }
+        }
+
+        // Display the posts on page load
+        window.onload = function() {
+            displayPosts(currentPage);
+        };
+
+        // Function to handle search (basic implementation)
+        function searchPosts() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const posts = document.querySelectorAll('.post');
+            posts.forEach(post => {
+                const title = post.querySelector('h3').innerText.toLowerCase();
+                const content = post.querySelector('p.post-content') ? post.querySelector('p.post-content').innerText.toLowerCase() : '';
+                if (title.includes(query) || content.includes(query)) {
+                    post.style.display = 'block';
+                } else {
+                    post.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

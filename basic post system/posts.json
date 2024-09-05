@@ -1,0 +1,14 @@
+[
+    {
+        "title": "First Post",
+        "author": "Author One",
+        "content": "This is the first post.",
+        "image": "path/to/image1.jpg"
+    },
+    {
+        "title": "Second Post",
+        "author": "Author Two",
+        "content": "This is the second post.",
+        "image": "path/to/image2.jpg"
+    }
+]
